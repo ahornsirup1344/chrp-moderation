@@ -6,9 +6,29 @@ cd "$DIR"
 
 # .env erstellen falls nicht vorhanden
 if [ ! -f ".env" ]; then
-    echo "Kein .env gefunden. Bitte Discord Bot Token eingeben:"
-    read -rp "DISCORD_BOT_TOKEN: " TOKEN
-    echo "DISCORD_BOT_TOKEN=$TOKEN" > .env
+    echo "=== .env Setup ==="
+    read -rp "DISCORD_BOT_TOKEN: " V1
+    read -rp "ERLC_SERVER_KEY: " V2
+    read -rp "SUPABASE_URL: " V3
+    read -rp "SUPABASE_KEY: " V4
+    read -rp "VERIFICATION_CHANNEL_ID: " V5
+    read -rp "ADD_ROLE_IDS: " V6
+    read -rp "REMOVE_ROLE_IDS: " V7
+    read -rp "CODE_TTL_SECONDS (Standard: 600): " V8
+    V8=${V8:-600}
+    read -rp "VERIFY_LOG_CHANNEL_ID: " V9
+
+    cat > .env <<EOF
+DISCORD_BOT_TOKEN=$V1
+ERLC_SERVER_KEY=$V2
+SUPABASE_URL=$V3
+SUPABASE_KEY=$V4
+VERIFICATION_CHANNEL_ID=$V5
+ADD_ROLE_IDS=$V6
+REMOVE_ROLE_IDS=$V7
+CODE_TTL_SECONDS=$V8
+VERIFY_LOG_CHANNEL_ID=$V9
+EOF
     echo ".env wurde erstellt."
 fi
 
