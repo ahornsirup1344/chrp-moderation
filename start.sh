@@ -46,10 +46,6 @@ echo "Requirements installiert."
 
 # Screen-Session prüfen
 if screen -list | grep -q "$SESSION"; then
-    if [ "$STY" = "${SESSION}" ] || echo "$STY" | grep -q "$SESSION"; then
-        echo "Du bist bereits in der Session '$SESSION'."
-        exit 0
-    fi
     echo "Session '$SESSION' läuft bereits — wird neu gestartet..."
     screen -X -S "$SESSION" quit
     sleep 1
