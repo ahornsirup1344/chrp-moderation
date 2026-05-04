@@ -9,7 +9,8 @@ from settings.config import (
     LANDAUSWAHL_ROLE_SWITZERLAND,
     LANDAUSWAHL_ROLE_GERMANY,
     LANDAUSWAHL_ROLE_AUSTRIA,
-    LANDAUSWAHL_ALWAYS_ROLES
+    LANDAUSWAHL_ALWAYS_ROLES,
+    LANDAUSWAHL_REMOVE_ROLES
 )
 
 CONFIG_FILE = "welcome_config.json"
@@ -109,6 +110,19 @@ class LandAuswahlView(discord.ui.View):
                 r = interaction.guild.get_role(int(rid))
                 if r:
                     always_roles.append(r)
+
+            remove_ids = LANDAUSWAHL_REMOVE_ROLES
+            if isinstance(remove_ids, int):
+                remove_ids = [remove_ids]
+
+            roles_to_remove = []
+            for rid in remove_ids:
+                r = interaction.guild.get_role(int(rid))
+                if r and r in member.roles:
+                    roles_to_remove.append(r)
+
+            if roles_to_remove:
+                await member.remove_roles(*roles_to_remove, reason="Landauswahl - Entfernte Rollen")
 
             roles_to_add = [role] + always_roles
             await interaction.user.add_roles(*roles_to_add, reason="Landauswahl per Button + Immerrollen")
