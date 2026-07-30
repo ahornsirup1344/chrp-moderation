@@ -40,13 +40,20 @@ placeholders:
 | `READ_ME_CHANNEL_ID`  | Channel with chain of command / duties & rules (Read me)        |
 | `PANEL_LOG_CHANNEL_ID`| Optional: channel to log who used the panel. Leave `0` to disable |
 
-## 4. Send the panel
+## 4. Panel auto-refresh
 
-In the panel channel (or any channel, if `PANEL_CHANNEL_ID` is set), run:
+Once `PANEL_CHANNEL_ID` is set, the bot posts the panel automatically on
+every startup — no manual command needed. On each start it:
 
-```
-!456panel
-```
+1. Looks up the last sent panel message (saved in `Jonas/cogs/panel_456.json`).
+2. If found, edits it in place (embed + dropdown refreshed).
+3. If it was deleted, searches the channel history for an existing bot
+   panel message and refreshes that instead.
+4. Otherwise sends a brand-new panel message and saves its ID.
 
-(Requires Administrator permission. The panel is a persistent component,
-so it keeps working after bot restarts without needing to be re-sent.)
+The dropdown itself is a persistent component (`custom_id`-based), so it
+keeps working across restarts without needing to be resent.
+
+If you ever want to force a fresh panel message manually (e.g. to move it
+to the bottom of the channel), run `!456panel` (requires Administrator
+permission) — it sends a new message and updates the saved reference.

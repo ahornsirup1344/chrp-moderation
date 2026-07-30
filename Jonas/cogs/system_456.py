@@ -1,6 +1,9 @@
 import discord
 from discord.ext import commands
+import json
 import traceback
+from pathlib import Path
+from typing import Optional
 
 from settings.config import (
     PERSONNEL_ROLE_ID,
@@ -12,6 +15,25 @@ from settings.config import (
 
 PANEL_TITLE = "[456] System's"
 SELECT_CUSTOM_ID = "456_system:select"
+PERSIST_FILE = Path(__file__).parent / "panel_456.json"
+
+
+def load_persist() -> dict:
+    try:
+        if PERSIST_FILE.exists():
+            with PERSIST_FILE.open("r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception:
+        traceback.print_exc()
+    return {}
+
+
+def save_persist(data: dict) -> None:
+    try:
+        with PERSIST_FILE.open("w", encoding="utf-8") as f:
+            json.dump(data, f)
+    except Exception:
+        traceback.print_exc()
 
 
 async def log_usage(bot: commands.Bot, guild: discord.Guild, description: str):
@@ -109,6 +131,9 @@ class System456Cog(commands.Cog):
         self.bot = bot
         self.bot.add_view(SystemView())
 
+    async def cog_load(self):
+        self.bot.loop.create_task(self._ensure_panel_task())
+
     def get_panel_embed(self) -> discord.Embed:
         return discord.Embed(
             title=PANEL_TITLE,
@@ -126,17 +151,72 @@ class System456Cog(commands.Cog):
             traceback.print_exc()
             return None
 
+    async def _ensure_panel_task(self):
+        """Automatically (re)sends or refreshes the panel on every bot start, no manual command needed."""
+        await self.bot.wait_until_ready()
+
+        if not PANEL_CHANNEL_ID:
+            print("[System456] PANEL_CHANNEL_ID ist nicht gesetzt – automatisches Panel wird uebersprungen.")
+            return
+
+        channel = await self._resolve_channel(PANEL_CHANNEL_ID)
+        if not channel:
+            print(f"[System456] Panel-Kanal {PANEL_CHANNEL_ID} nicht gefunden.")
+            return
+
+        data = load_persist()
+        saved_message_id: Optional[int] = data.get("message_id")
+
+        if saved_message_id:
+            try:
+                msg = await channel.fetch_message(saved_message_id)
+                if msg and msg.author == self.bot.user:
+                    await msg.edit(embed=self.get_panel_embed(), view=SystemView())
+                    print("[System456] Panel via gespeicherter message_id gefunden und aktualisiert.")
+                    return
+            except discord.NotFound:
+                print("[System456] Gespeicherte message_id nicht gefunden (geloescht) – sende neues Panel.")
+            except discord.Forbidden:
+                print("[System456] Keine Rechte, gespeicherte Panel-Nachricht zu holen/editieren.")
+            except Exception:
+                print("[System456] Fehler beim Abrufen der gespeicherten Panel-Nachricht:")
+                traceback.print_exc()
+
+        try:
+            async for message in channel.history(limit=200):
+                if message.author == self.bot.user and message.components:
+                    await message.edit(embed=self.get_panel_embed(), view=SystemView())
+                    save_persist({"message_id": message.id})
+                    print("[System456] Bestehendes Panel in History gefunden & aktualisiert.")
+                    return
+        except discord.Forbidden:
+            print("[System456] Keine Rechte, Nachrichtenverlauf zu lesen.")
+        except Exception:
+            print("[System456] Fehler beim Durchsuchen der History:")
+            traceback.print_exc()
+
+        try:
+            msg = await channel.send(embed=self.get_panel_embed(), view=SystemView())
+            save_persist({"message_id": msg.id})
+            print("[System456] Neues Panel gesendet und message_id gespeichert.")
+        except discord.Forbidden:
+            print("[System456] Keine Rechte, um Nachrichten zu senden.")
+        except Exception:
+            print("[System456] Fehler beim Senden des neuen Panels:")
+            traceback.print_exc()
+
     @commands.command(name="456panel")
     @commands.has_permissions(administrator=True)
     async def cmd_send_panel(self, ctx: commands.Context):
-        """Sends the [456] System's dropdown panel."""
+        """Manually (re)sends the [456] System's dropdown panel and updates the saved reference."""
         channel_id = PANEL_CHANNEL_ID or ctx.channel.id
         channel = await self._resolve_channel(channel_id)
         if not channel:
             await ctx.send("❌ Panel channel not found. Check PANEL_CHANNEL_ID in settings/config.py.")
             return
 
-        await channel.send(embed=self.get_panel_embed(), view=SystemView())
+        msg = await channel.send(embed=self.get_panel_embed(), view=SystemView())
+        save_persist({"message_id": msg.id})
         await ctx.send(f"✅ Panel sent in {channel.mention}.")
 
 
