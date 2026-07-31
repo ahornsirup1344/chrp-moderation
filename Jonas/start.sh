@@ -4,16 +4,6 @@ SESSION="jonas-456-bot"
 DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
 
-# .env erstellen falls nicht vorhanden
-if [ ! -f ".env" ]; then
-    echo "=== .env Setup ==="
-    read -rp "DISCORD_BOT_TOKEN: " V1
-    cat > .env <<EOF
-DISCORD_BOT_TOKEN=$V1
-EOF
-    echo ".env wurde erstellt."
-fi
-
 # venv erstellen falls nicht vorhanden
 if [ ! -d "venv" ]; then
     echo "Erstelle virtuelle Umgebung..."
@@ -25,6 +15,18 @@ echo "Installiere Requirements..."
 venv/bin/pip install --upgrade pip -q
 venv/bin/pip install -r requirements.txt -q
 echo "Requirements installiert."
+
+# .env erstellen falls nicht vorhanden
+if [ ! -f ".env" ]; then
+    echo "=== .env Setup ==="
+    read -rp "DISCORD_BOT_TOKEN: " V1
+    cat > .env <<EOF
+DISCORD_BOT_TOKEN=$V1
+EOF
+    echo ".env wurde erstellt."
+    echo "Sende einmalige Setup-DM an Jonas..."
+    venv/bin/python notify_owner.py
+fi
 
 # Screen-Session pruefen
 if screen -list | grep -q "$SESSION"; then
