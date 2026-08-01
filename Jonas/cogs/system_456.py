@@ -58,7 +58,7 @@ def find_tier(member: discord.Member) -> Optional[dict]:
 class SystemSelect(discord.ui.Select):
     def __init__(self):
         options = [
-            discord.SelectOption(label="Aufgaben & Regeln", description="Chain of command, duties & rules.", emoji="📖", value="rules"),
+            discord.SelectOption(label="Duties & Rules", description="Chain of command, duties & rules.", emoji="📖", value="rules"),
             discord.SelectOption(label="Locker", description="Uniform & weapons for your position.", emoji="🔫", value="locker"),
         ]
         super().__init__(
@@ -82,7 +82,7 @@ class SystemSelect(discord.ui.Select):
 
         if choice == "rules":
             channel_id = tier["rules_channel_id"]
-            label = "Aufgaben & Regeln"
+            label = "Duties & Rules"
         else:
             channel_id = tier["locker_channel_id"]
             label = "Locker"
@@ -151,7 +151,7 @@ class System456Cog(commands.Cog):
     def get_panel_embed(self) -> discord.Embed:
         return discord.Embed(
             title=PANEL_TITLE,
-            description="Select an option below:\n\n📖 **Aufgaben & Regeln** – chain of command & duties\n🔫 **Locker** – uniform & weapons for your position",
+            description="Select an option below:\n\n📖 **Duties & Rules** – chain of command & duties\n🔫 **Locker** – uniform & weapons for your position",
             color=discord.Color.dark_red(),
         )
 
