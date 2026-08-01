@@ -1,8 +1,9 @@
 # [456] System's – Deployment Notes
 
 Standalone Discord bot in this folder. Only feature so far: a dropdown panel
-with two options (**Armory**, **Read me**) that redirects a specific
-personnel role to the correct channel.
+with two options (**Aufgaben & Regeln**, **Locker**) that redirects each
+staff member to the channel pair matching their rank in the hierarchy
+(Waiter through Frontman).
 
 ## 1. Create the Discord application
 
@@ -32,13 +33,18 @@ Once the bot has joined the server, enable Developer Mode in Discord
 following. Then edit `Jonas/settings/config.py` and replace the `0`
 placeholders:
 
-| Constant              | What to put there                                              |
-|-----------------------|------------------------------------------------------------------|
-| `PANEL_CHANNEL_ID`    | Channel where the `!456panel` dropdown message should be posted |
-| `PERSONNEL_ROLE_ID`   | Role allowed to use the dropdown ("bestimmtes Personal")        |
-| `ARMORY_CHANNEL_ID`   | Channel with uniform & weapons info (Armory)                    |
-| `READ_ME_CHANNEL_ID`  | Channel with chain of command / duties & rules (Read me)        |
-| `PANEL_LOG_CHANNEL_ID`| Optional: channel to log who used the panel. Leave `0` to disable |
+| Constant                | What to put there                                                |
+|--------------------------|------------------------------------------------------------------|
+| `PANEL_CHANNEL_ID`      | Channel where the `!456panel` dropdown message should be posted  |
+| `PANEL_LOG_CHANNEL_ID`  | Optional: channel to log who used the panel. Leave `0` to disable |
+| `HIERARCHY[i]["role_id"]` | Discord role ID for that rank (Waiter, ..., Officer, Manager, Frontman) |
+| `HIERARCHY[i]["rules_channel_id"]` | That rank's `<rank>-assignments` channel in the duties/rules category |
+| `HIERARCHY[i]["locker_channel_id"]` | That rank's `<rank>-assignments` channel in the locker (uniform/weapons) category |
+
+"Personnel" isn't a separate role — anyone holding one of the `role_id`
+values in `HIERARCHY` is automatically allowed to use the panel, and gets
+routed to the channel pair for their own rank. Add more ranks by appending
+another row to `HIERARCHY` in `settings/config.py`, no code change needed.
 
 ## 4. Panel auto-refresh
 

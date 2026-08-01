@@ -6,9 +6,7 @@ from pathlib import Path
 from typing import Optional
 
 from settings.config import (
-    PERSONNEL_ROLE_ID,
-    ARMORY_CHANNEL_ID,
-    READ_ME_CHANNEL_ID,
+    HIERARCHY,
     PANEL_CHANNEL_ID,
     PANEL_LOG_CHANNEL_ID,
 )
@@ -48,11 +46,20 @@ async def log_usage(bot: commands.Bot, guild: discord.Guild, description: str):
         traceback.print_exc()
 
 
+def find_tier(member: discord.Member) -> Optional[dict]:
+    """Returns the HIERARCHY entry matching the member's rank role, or None if they hold none."""
+    member_role_ids = {r.id for r in getattr(member, "roles", [])}
+    for tier in HIERARCHY:
+        if tier["role_id"] and tier["role_id"] in member_role_ids:
+            return tier
+    return None
+
+
 class SystemSelect(discord.ui.Select):
     def __init__(self):
         options = [
-            discord.SelectOption(label="Armory", description="Get access to the uniform & weapons channel.", emoji="🔫", value="armory"),
-            discord.SelectOption(label="Read me", description="Chain of command, duties & rules.", emoji="📖", value="readme"),
+            discord.SelectOption(label="Aufgaben & Regeln", description="Chain of command, duties & rules.", emoji="📖", value="rules"),
+            discord.SelectOption(label="Locker", description="Uniform & weapons for your position.", emoji="🔫", value="locker"),
         ]
         super().__init__(
             placeholder="Select an option...",
@@ -64,31 +71,39 @@ class SystemSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         choice = self.values[0]
+        tier = find_tier(interaction.user)
 
-        if choice == "armory":
-            channel_id = ARMORY_CHANNEL_ID
-            label = "Armory"
+        # interaction_check already guarantees a tier exists, but stay defensive.
+        if not tier:
+            await interaction.response.send_message(
+                "❌ You don't have permission to use this menu.", ephemeral=True,
+            )
+            return
+
+        if choice == "rules":
+            channel_id = tier["rules_channel_id"]
+            label = "Aufgaben & Regeln"
         else:
-            channel_id = READ_ME_CHANNEL_ID
-            label = "Read me"
+            channel_id = tier["locker_channel_id"]
+            label = "Locker"
 
         channel = interaction.guild.get_channel(int(channel_id)) if channel_id else None
 
         if not channel:
             await interaction.response.send_message(
-                f"❌ The `{label}` channel is not configured yet. Please contact an administrator.",
+                f"❌ The `{label}` channel for **{tier['name']}** is not configured yet. Please contact an administrator.",
                 ephemeral=True,
             )
             return
 
         await interaction.response.send_message(
-            f"✅ **{label}**: {channel.mention}",
+            f"✅ **{label}** ({tier['name']}): {channel.mention}",
             ephemeral=True,
         )
         await log_usage(
             interaction.client,
             interaction.guild,
-            f"{interaction.user.mention} selected **{label}** and was redirected to {channel.mention}.",
+            f"{interaction.user.mention} ({tier['name']}) selected **{label}** and was redirected to {channel.mention}.",
         )
 
 
@@ -103,14 +118,13 @@ class SystemView(discord.ui.View):
                 await interaction.response.send_message("This menu only works on the server.", ephemeral=True)
                 return False
 
-            if not PERSONNEL_ROLE_ID:
+            if not any(tier["role_id"] for tier in HIERARCHY):
                 await interaction.response.send_message(
                     "❌ This menu is not configured yet. Please contact an administrator.", ephemeral=True
                 )
                 return False
 
-            member_roles = getattr(interaction.user, "roles", [])
-            if not any(r.id == int(PERSONNEL_ROLE_ID) for r in member_roles):
+            if find_tier(interaction.user) is None:
                 await interaction.response.send_message(
                     "❌ You don't have permission to use this menu.", ephemeral=True
                 )
@@ -137,7 +151,7 @@ class System456Cog(commands.Cog):
     def get_panel_embed(self) -> discord.Embed:
         return discord.Embed(
             title=PANEL_TITLE,
-            description="Select an option below:\n\n🔫 **Armory** – uniform & weapons\n📖 **Read me** – chain of command & duties",
+            description="Select an option below:\n\n📖 **Aufgaben & Regeln** – chain of command & duties\n🔫 **Locker** – uniform & weapons for your position",
             color=discord.Color.dark_red(),
         )
 
