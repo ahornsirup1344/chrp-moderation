@@ -18,10 +18,12 @@ MAX_PLAYERS = 456  # Squid Game player cap - counter wraps back to 1 after this.
 FONT_SERIF = "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
 FONT_SERIF_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"
 
-PHOTO_BOX = (50, 150, 330, 620)  # matches assets/welcome_template.png layout
-VALUE_X0, VALUE_X1 = 630, 1200
-ROW_Y = [150, 267, 385, 502, 620]  # 4 row boundaries
-NUMBER_CENTER = (800, 75)
+# Coordinates measured directly off Jonas's real template (assets/welcome_template.png,
+# 800x400) by scanning for the grid lines - not eyeballed.
+PHOTO_BOX = (40, 95, 153, 230)
+VALUE_X0 = 282
+ROW_Y = [95, 128, 162, 193, 230]  # row0 "WELCOME TO" is static art, rows 1-3 are dynamic
+NUMBER_CENTER = (400, 51)
 
 
 def load_counter() -> int:
@@ -63,24 +65,24 @@ async def build_welcome_card(member: discord.Member, player_number: int) -> disc
     avatar = avatar.crop((left, top, left + box_w, top + box_h))
     img.paste(avatar, (px0, py0))
 
-    f_number = ImageFont.truetype(FONT_SERIF_BOLD, 60)
+    f_number = ImageFont.truetype(FONT_SERIF_BOLD, 34)
     number_text = f"{player_number:03d}"
     bbox = draw.textbbox((0, 0), number_text, font=f_number)
     tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
     draw.text((NUMBER_CENTER[0] - tw / 2, NUMBER_CENTER[1] - th / 2 - bbox[1]), number_text, font=f_number, fill=(10, 10, 10))
 
-    f_value = ImageFont.truetype(FONT_SERIF, 26)
+    # Row 0 ("WELCOME TO / 456 SQUID GAME") is static art - only rows 1-3 get overlaid.
+    f_value = ImageFont.truetype(FONT_SERIF, 17)
     values = [
-        member.display_name,
-        member.created_at.strftime("%b %Y"),
+        f"{member.created_at.year}                    -                    {member.joined_at.year if member.joined_at else ''}",
         str(member.id),
         member.joined_at.strftime("%m.%d.%Y") if member.joined_at else "-",
     ]
     for i, value in enumerate(values):
-        ry0, ry1 = ROW_Y[i], ROW_Y[i + 1]
+        ry0, ry1 = ROW_Y[i + 1], ROW_Y[i + 2]
         bbox = draw.textbbox((0, 0), value, font=f_value)
         th = bbox[3] - bbox[1]
-        draw.text((VALUE_X0 + 25, ry0 + (ry1 - ry0 - th) / 2 - bbox[1]), value, font=f_value, fill=(10, 10, 10))
+        draw.text((VALUE_X0 + 15, ry0 + (ry1 - ry0 - th) / 2 - bbox[1]), value, font=f_value, fill=(10, 10, 10))
 
     buf = io.BytesIO()
     img.save(buf, format="PNG")
