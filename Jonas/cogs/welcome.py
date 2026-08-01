@@ -52,6 +52,18 @@ def next_player_number() -> int:
     return count
 
 
+def draw_dashed_rect(draw, box, dash=6, gap=4, width=2, fill=(10, 10, 10)):
+    """Draws a dashed border - used to redraw the template's photo-slot outline
+    on top of the pasted avatar, so it still looks like a photo taped into a frame."""
+    x0, y0, x1, y1 = box
+    for x in range(x0, x1, dash + gap):
+        draw.line([(x, y0), (min(x + dash, x1), y0)], fill=fill, width=width)
+        draw.line([(x, y1), (min(x + dash, x1), y1)], fill=fill, width=width)
+    for y in range(y0, y1, dash + gap):
+        draw.line([(x0, y), (x0, min(y + dash, y1))], fill=fill, width=width)
+        draw.line([(x1, y), (x1, min(y + dash, y1))], fill=fill, width=width)
+
+
 async def build_welcome_card(member: discord.Member, player_number: int) -> discord.File:
     img = Image.open(TEMPLATE_PATH).convert("RGB")
     draw = ImageDraw.Draw(img)
@@ -66,6 +78,7 @@ async def build_welcome_card(member: discord.Member, player_number: int) -> disc
     top = (avatar.height - box_h) // 2
     avatar = avatar.crop((left, top, left + box_w, top + box_h))
     img.paste(avatar, (px0, py0))
+    draw_dashed_rect(draw, PHOTO_BOX)  # keep the "photo slot" outline visible over the picture
 
     f_number = ImageFont.truetype(FONT_SERIF_BOLD, 34)
     number_text = f"{player_number:03d}"

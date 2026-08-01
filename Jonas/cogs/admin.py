@@ -14,6 +14,14 @@ class AdminCog(commands.Cog):
         confirmation = await ctx.send(f"✅ Deleted {len(deleted) - 1} messages.")
         await confirmation.delete(delay=3)
 
+    @commands.command(name="clearall")
+    @commands.has_permissions(administrator=True)
+    async def cmd_clear_all(self, ctx: commands.Context):
+        """Deletes every message in this channel (pages through full history, no limit)."""
+        deleted = await ctx.channel.purge(limit=None)
+        confirmation = await ctx.send(f"✅ Deleted {len(deleted)} messages (entire channel history).")
+        await confirmation.delete(delay=3)
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AdminCog(bot))
