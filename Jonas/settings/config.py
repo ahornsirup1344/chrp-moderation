@@ -6,6 +6,9 @@
 PANEL_CHANNEL_ID = 1530780174835126435   # #staff-directory (Kategorie "GAME STAFF")
 PANEL_LOG_CHANNEL_ID = 0                 # optional: Log-Kanal fuer Panel-Nutzung, 0 = deaktiviert
 
+# --- Welcome-Karte ---
+WELCOME_CHANNEL_ID = 1452809194284777504  # #welcome (Kategorie "Entrance")
+
 # Hierarchie von Waiter bis Frontman. "Personal"-Status wird direkt daraus
 # abgeleitet: wer eine der role_id unten besitzt, darf das Panel benutzen.
 #
