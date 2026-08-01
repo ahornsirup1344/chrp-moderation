@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFont
 
-from settings.config import WELCOME_CHANNEL_ID
+from settings.config import WELCOME_CHANNEL_ID, RULES_CHANNEL_ID
 
 ASSETS_DIR = Path(__file__).parent.parent / "assets"
 TEMPLATE_PATH = ASSETS_DIR / "welcome_template.png"
@@ -107,6 +107,15 @@ async def build_welcome_card(member: discord.Member, player_number: int) -> disc
     return discord.File(buf, filename="welcome.png")
 
 
+def build_welcome_message(guild: discord.Guild, player_number: int) -> str:
+    rules_mention = f"<#{RULES_CHANNEL_ID}>" if RULES_CHANNEL_ID else "our rules"
+    return (
+        f"Welcome to **{guild.name}**\n"
+        f"make sure to read our {rules_mention}\n\n"
+        f"Player {player_number:03d}, you like to participate in the Games?"
+    )
+
+
 class WelcomeCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -123,7 +132,7 @@ class WelcomeCog(commands.Cog):
         try:
             player_number = next_player_number()
             file = await build_welcome_card(member, player_number)
-            await channel.send(content=f"Welcome, {member.mention}. You are Player {player_number:03d}.", file=file)
+            await channel.send(content=build_welcome_message(member.guild, player_number), file=file)
             print(f"[Welcome] Karte fuer {member} gesendet (Player {player_number:03d}).")
         except Exception:
             print("[Welcome] Fehler beim Erstellen/Senden der Willkommenskarte:")
@@ -137,7 +146,8 @@ class WelcomeCog(commands.Cog):
         if preview_number > MAX_PLAYERS:
             preview_number = 1
         file = await build_welcome_card(ctx.author, preview_number)
-        await ctx.send(content=f"Preview (next real join would be Player {preview_number:03d}):", file=file)
+        preview_text = build_welcome_message(ctx.guild, preview_number)
+        await ctx.send(content=f"**Preview** (next real join would be Player {preview_number:03d}):\n\n{preview_text}", file=file)
 
 
 async def setup(bot: commands.Bot):
