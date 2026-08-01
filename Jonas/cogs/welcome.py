@@ -15,8 +15,10 @@ COUNTER_FILE = Path(__file__).parent.parent / "welcome_counter.json"
 
 MAX_PLAYERS = 456  # Squid Game player cap - counter wraps back to 1 after this.
 
-FONT_SERIF = "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
-FONT_SERIF_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"
+# Gelasio: Google's free, metric-compatible Georgia substitute (Georgia itself
+# is a Microsoft-licensed font, not redistributable in this repo).
+FONT_SERIF = str(ASSETS_DIR / "fonts" / "Gelasio-Regular.ttf")
+FONT_SERIF_BOLD = str(ASSETS_DIR / "fonts" / "Gelasio-Bold.ttf")
 
 # Coordinates measured directly off Jonas's real template (assets/welcome_template.png,
 # 800x400) by scanning for the grid lines - not eyeballed.
