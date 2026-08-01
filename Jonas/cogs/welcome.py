@@ -21,7 +21,7 @@ FONT_SERIF_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"
 # Coordinates measured directly off Jonas's real template (assets/welcome_template.png,
 # 800x400) by scanning for the grid lines - not eyeballed.
 PHOTO_BOX = (40, 95, 153, 230)
-VALUE_X0 = 282
+VALUE_X0, VALUE_X1 = 282, 575
 ROW_Y = [95, 128, 162, 193, 230]  # row0 "WELCOME TO" is static art, rows 1-3 are dynamic
 NUMBER_CENTER = (400, 51)
 
@@ -67,6 +67,7 @@ async def build_welcome_card(member: discord.Member, player_number: int) -> disc
 
     f_number = ImageFont.truetype(FONT_SERIF_BOLD, 34)
     number_text = f"{player_number:03d}"
+    draw.rectangle([NUMBER_CENTER[0] - 60, NUMBER_CENTER[1] - 25, NUMBER_CENTER[0] + 60, NUMBER_CENTER[1] + 25], fill=(255, 255, 255))
     bbox = draw.textbbox((0, 0), number_text, font=f_number)
     tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
     draw.text((NUMBER_CENTER[0] - tw / 2, NUMBER_CENTER[1] - th / 2 - bbox[1]), number_text, font=f_number, fill=(10, 10, 10))
@@ -80,6 +81,7 @@ async def build_welcome_card(member: discord.Member, player_number: int) -> disc
     ]
     for i, value in enumerate(values):
         ry0, ry1 = ROW_Y[i + 1], ROW_Y[i + 2]
+        draw.rectangle([VALUE_X0 + 1, ry0 + 1, VALUE_X1 - 1, ry1 - 1], fill=(255, 255, 255))
         bbox = draw.textbbox((0, 0), value, font=f_value)
         th = bbox[3] - bbox[1]
         draw.text((VALUE_X0 + 15, ry0 + (ry1 - ry0 - th) / 2 - bbox[1]), value, font=f_value, fill=(10, 10, 10))
