@@ -58,11 +58,11 @@ def find_tier(member: discord.Member) -> Optional[dict]:
 class SystemSelect(discord.ui.Select):
     def __init__(self):
         options = [
-            discord.SelectOption(label="Aufgaben & Regeln", description="Chain of command, duties & rules.", emoji="📖", value="rules"),
-            discord.SelectOption(label="Locker", description="Uniform & weapons for your position.", emoji="🔫", value="locker"),
+            discord.SelectOption(label="Aufgaben & Regeln", description="Befehlskette, Aufgaben & Regeln.", emoji="📖", value="rules"),
+            discord.SelectOption(label="Locker", description="Uniform & Waffen für deine Position.", emoji="🔫", value="locker"),
         ]
         super().__init__(
-            placeholder="Select an option...",
+            placeholder="Wähle eine Option...",
             min_values=1,
             max_values=1,
             options=options,
@@ -76,7 +76,7 @@ class SystemSelect(discord.ui.Select):
         # interaction_check already guarantees a tier exists, but stay defensive.
         if not tier:
             await interaction.response.send_message(
-                "❌ You don't have permission to use this menu.", ephemeral=True,
+                "❌ Du hast keine Berechtigung, dieses Menü zu benutzen.", ephemeral=True,
             )
             return
 
@@ -91,7 +91,7 @@ class SystemSelect(discord.ui.Select):
 
         if not channel:
             await interaction.response.send_message(
-                f"❌ The `{label}` channel for **{tier['name']}** is not configured yet. Please contact an administrator.",
+                f"❌ Der `{label}`-Channel für **{tier['name']}** ist noch nicht eingerichtet. Bitte wende dich an einen Administrator.",
                 ephemeral=True,
             )
             return
@@ -103,7 +103,7 @@ class SystemSelect(discord.ui.Select):
         await log_usage(
             interaction.client,
             interaction.guild,
-            f"{interaction.user.mention} ({tier['name']}) selected **{label}** and was redirected to {channel.mention}.",
+            f"{interaction.user.mention} ({tier['name']}) hat **{label}** ausgewählt und wurde zu {channel.mention} weitergeleitet.",
         )
 
 
@@ -115,18 +115,18 @@ class SystemView(discord.ui.View):
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         try:
             if interaction.guild is None:
-                await interaction.response.send_message("This menu only works on the server.", ephemeral=True)
+                await interaction.response.send_message("Dieses Menü funktioniert nur auf dem Server.", ephemeral=True)
                 return False
 
             if not any(tier["role_id"] for tier in HIERARCHY):
                 await interaction.response.send_message(
-                    "❌ This menu is not configured yet. Please contact an administrator.", ephemeral=True
+                    "❌ Dieses Menü ist noch nicht eingerichtet. Bitte wende dich an einen Administrator.", ephemeral=True
                 )
                 return False
 
             if find_tier(interaction.user) is None:
                 await interaction.response.send_message(
-                    "❌ You don't have permission to use this menu.", ephemeral=True
+                    "❌ Du hast keine Berechtigung, dieses Menü zu benutzen.", ephemeral=True
                 )
                 return False
 
@@ -134,7 +134,7 @@ class SystemView(discord.ui.View):
         except Exception:
             traceback.print_exc()
             try:
-                await interaction.response.send_message("An error occurred while checking your permissions.", ephemeral=True)
+                await interaction.response.send_message("Beim Prüfen deiner Berechtigung ist ein Fehler aufgetreten.", ephemeral=True)
             except Exception:
                 pass
             return False
@@ -151,7 +151,7 @@ class System456Cog(commands.Cog):
     def get_panel_embed(self) -> discord.Embed:
         return discord.Embed(
             title=PANEL_TITLE,
-            description="Select an option below:\n\n📖 **Aufgaben & Regeln** – chain of command & duties\n🔫 **Locker** – uniform & weapons for your position",
+            description="Wähle eine Option:\n\n📖 **Aufgaben & Regeln** – Befehlskette & Aufgaben\n🔫 **Locker** – Uniform & Waffen für deine Position",
             color=discord.Color.dark_red(),
         )
 
@@ -226,12 +226,12 @@ class System456Cog(commands.Cog):
         channel_id = PANEL_CHANNEL_ID or ctx.channel.id
         channel = await self._resolve_channel(channel_id)
         if not channel:
-            await ctx.send("❌ Panel channel not found. Check PANEL_CHANNEL_ID in settings/config.py.")
+            await ctx.send("❌ Panel-Channel nicht gefunden. PANEL_CHANNEL_ID in settings/config.py prüfen.")
             return
 
         msg = await channel.send(embed=self.get_panel_embed(), view=SystemView())
         save_persist({"message_id": msg.id})
-        await ctx.send(f"✅ Panel sent in {channel.mention}.")
+        await ctx.send(f"✅ Panel gesendet in {channel.mention}.")
 
 
 async def setup(bot: commands.Bot):
