@@ -18,7 +18,6 @@ MAX_PLAYERS = 456  # Squid Game player cap - counter wraps back to 1 after this.
 # Gelasio: Google's free, metric-compatible Georgia substitute (Georgia itself
 # is a Microsoft-licensed font, not redistributable in this repo).
 FONT_SERIF = str(ASSETS_DIR / "fonts" / "Gelasio-Regular.ttf")
-FONT_SERIF_BOLD = str(ASSETS_DIR / "fonts" / "Gelasio-Bold.ttf")
 
 # Coordinates measured directly off Jonas's real template (assets/welcome_template.png,
 # 800x400) by scanning for the grid lines - not eyeballed.
@@ -80,7 +79,7 @@ async def build_welcome_card(member: discord.Member, player_number: int) -> disc
     img.paste(avatar, (px0, py0))
     draw_dashed_rect(draw, PHOTO_BOX)  # keep the "photo slot" outline visible over the picture
 
-    f_number = ImageFont.truetype(FONT_SERIF_BOLD, 34)
+    f_number = ImageFont.truetype(FONT_SERIF, 34)  # Georgia/Gelasio regular, not bold - consistent everywhere
     number_text = f"{player_number:03d}"
     draw.rectangle([NUMBER_CENTER[0] - 60, NUMBER_CENTER[1] - 25, NUMBER_CENTER[0] + 60, NUMBER_CENTER[1] + 25], fill=(255, 255, 255))
     bbox = draw.textbbox((0, 0), number_text, font=f_number)
@@ -107,13 +106,20 @@ async def build_welcome_card(member: discord.Member, player_number: int) -> disc
     return discord.File(buf, filename="welcome.png")
 
 
-def build_welcome_message(guild: discord.Guild, player_number: int) -> str:
-    rules_mention = f"<#{RULES_CHANNEL_ID}>" if RULES_CHANNEL_ID else "our rules"
-    return (
-        f"Welcome to **{guild.name}**\n"
-        f"make sure to read our {rules_mention}\n\n"
-        f"Player {player_number:03d}, you like to participate in the Games?"
-    )
+class WelcomeLayout(discord.ui.LayoutView):
+    """Components V2 layout: text + image combined in one card instead of
+    a plain message with a separate file attachment."""
+
+    def __init__(self, guild: discord.Guild, player_number: int):
+        super().__init__(timeout=None)
+        rules_mention = f"<#{RULES_CHANNEL_ID}>" if RULES_CHANNEL_ID else "our rules"
+        container = discord.ui.Container(
+            discord.ui.TextDisplay(f"Welcome to **{guild.name}**\nmake sure to read our {rules_mention}"),
+            discord.ui.MediaGallery(discord.MediaGalleryItem(media="attachment://welcome.png")),
+            discord.ui.TextDisplay(f"Player {player_number:03d}, you like to participate in the Games?"),
+            accent_colour=discord.Color.dark_red(),
+        )
+        self.add_item(container)
 
 
 class WelcomeCog(commands.Cog):
@@ -132,7 +138,7 @@ class WelcomeCog(commands.Cog):
         try:
             player_number = next_player_number()
             file = await build_welcome_card(member, player_number)
-            await channel.send(content=build_welcome_message(member.guild, player_number), file=file)
+            await channel.send(view=WelcomeLayout(member.guild, player_number), file=file)
             print(f"[Welcome] Karte fuer {member} gesendet (Player {player_number:03d}).")
         except Exception:
             print("[Welcome] Fehler beim Erstellen/Senden der Willkommenskarte:")
@@ -145,9 +151,9 @@ class WelcomeCog(commands.Cog):
         preview_number = load_counter() + 1
         if preview_number > MAX_PLAYERS:
             preview_number = 1
+        await ctx.send(content=f"**Preview** (next real join would be Player {preview_number:03d}):")
         file = await build_welcome_card(ctx.author, preview_number)
-        preview_text = build_welcome_message(ctx.guild, preview_number)
-        await ctx.send(content=f"**Preview** (next real join would be Player {preview_number:03d}):\n\n{preview_text}", file=file)
+        await ctx.send(view=WelcomeLayout(ctx.guild, preview_number), file=file)
 
 
 async def setup(bot: commands.Bot):
