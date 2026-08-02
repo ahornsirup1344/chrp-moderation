@@ -7,6 +7,7 @@ import discord
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFont
 
+from permissions import is_owner_or_admin
 from settings.config import WELCOME_CHANNEL_ID, RULES_CHANNEL_ID
 
 ASSETS_DIR = Path(__file__).parent.parent / "assets"
@@ -145,7 +146,7 @@ class WelcomeCog(commands.Cog):
             traceback.print_exc()
 
     @commands.command(name="testwelcome")
-    @commands.has_permissions(administrator=True)
+    @is_owner_or_admin()
     async def cmd_test_welcome(self, ctx: commands.Context):
         """Preview the welcome card using your own account, without consuming a real player number."""
         preview_number = load_counter() + 1

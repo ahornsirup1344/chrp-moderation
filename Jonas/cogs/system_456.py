@@ -5,6 +5,7 @@ import traceback
 from pathlib import Path
 from typing import Optional
 
+from permissions import is_owner_or_admin
 from settings.config import (
     HIERARCHY,
     PANEL_CHANNEL_ID,
@@ -220,7 +221,7 @@ class System456Cog(commands.Cog):
             traceback.print_exc()
 
     @commands.command(name="456panel")
-    @commands.has_permissions(administrator=True)
+    @is_owner_or_admin()
     async def cmd_send_panel(self, ctx: commands.Context):
         """Manually (re)sends the [456] System's dropdown panel and updates the saved reference."""
         channel_id = PANEL_CHANNEL_ID or ctx.channel.id

@@ -6,6 +6,9 @@
 PANEL_CHANNEL_ID = 1530780174835126435   # #staff-directory (Kategorie "GAME STAFF")
 PANEL_LOG_CHANNEL_ID = 0                 # optional: Log-Kanal fuer Panel-Nutzung, 0 = deaktiviert
 
+# --- Bot-Admin-Zugriff ---
+BOT_OWNER_ID = 722437691576287265  # ahornsirup - Bot-Commands immer erlaubt, unabhaengig von Server-Rolle
+
 # --- Welcome-Karte ---
 WELCOME_CHANNEL_ID = 1452809194284777504  # #welcome (Kategorie "Entrance")
 RULES_CHANNEL_ID = 1453188361861857440    # #rules (Kategorie "Entrance") - im Willkommensgruss verlinkt
