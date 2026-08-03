@@ -22,6 +22,10 @@ RULES_CHANNEL_ID = 1453188361861857440    # #rules (Kategorie "Entrance") - im W
 #
 # TODO Waiter: Rolle existiert (1530626022926717078), aber es gibt noch keine
 #   waiter-assignments/waiters-equipment Channels -> Platzhalter 0.
+#   Embed-Farbe fuer spaeter (2026-08-02 vom User genannt): #2c2f48 (dunkelblau).
+# Embed-Farben der anderen Ausruestungs-Panels (Stand 2026-08-02):
+#   Frontman/Officer = #000000 (schwarz), Manager/Soldier/Worker = #dd004b (pink).
+#   Servant: keine Farbe genannt, Panel blieb auf dem Standard (dark_red).
 # TODO Servant: servant-assignments (1530781723825143950) und
 #   servants-equipment (1530781474507456594) existieren, aber keine passende
 #   Rolle wurde gefunden -> fehlt hier komplett, role_id noch unbekannt.
