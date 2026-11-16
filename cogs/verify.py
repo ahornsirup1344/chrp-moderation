@@ -341,31 +341,75 @@ class VerifyCog(commands.Cog):
                 )
                 return
 
+            role_errors = []
+            print(f"[Verify] {member} ({member.id}): ADD={self.add_role_ids} REMOVE={self.remove_role_ids}")
+
+            if not self.add_role_ids:
+                role_errors.append("ADD_ROLE_IDS ist leer (nicht in .env gesetzt)")
+
             # entfernen
             for r in self.remove_role_ids:
                 try:
                     rid = int(r)
                 except Exception:
+                    role_errors.append(f"REMOVE_ROLE_IDS enthält keine gültige ID: `{r}`")
                     continue
                 role = guild.get_role(rid)
-                if role and role in member.roles:
+                if role is None:
+                    role_errors.append(f"Rolle `{rid}` (entfernen) existiert auf diesem Server nicht")
+                    continue
+                if role in member.roles:
                     try:
                         await member.remove_roles(role, reason="ER:LC verification")
                     except Exception as e:
                         print("Fehler remove_roles:", e)
+                        role_errors.append(f"Entfernen von {role.name} fehlgeschlagen: {e}")
 
             # hinzufügen
             for r in self.add_role_ids:
                 try:
                     rid = int(r)
                 except Exception:
+                    role_errors.append(f"ADD_ROLE_IDS enthält keine gültige ID: `{r}`")
                     continue
                 role = guild.get_role(rid)
-                if role and role not in member.roles:
+                if role is None:
+                    role_errors.append(f"Rolle `{rid}` (hinzufügen) existiert auf diesem Server nicht")
+                    continue
+                if role not in member.roles:
                     try:
                         await member.add_roles(role, reason="ER:LC verification")
                     except Exception as e:
                         print("Fehler add_roles:", e)
+                        role_errors.append(
+                            f"Hinzufügen von {role.name} fehlgeschlagen: {e} "
+                            f"(Bot-Rolle muss über {role.name} stehen + Recht 'Rollen verwalten')"
+                        )
+
+            if role_errors:
+                print(f"[Verify] Rollenfehler bei {member}: {role_errors}")
+                if self.verify_log_channel_id:
+                    log_channel = guild.get_channel(self.verify_log_channel_id)
+                    if log_channel:
+                        embed = discord.Embed(
+                            title="⚠️ Verify: Rollenvergabe fehlgeschlagen",
+                            description=f"{member.mention} (`{member.id}`) / Roblox: `{entry.get('roblox')}`\n\n"
+                                        + "\n".join(f"• {e}" for e in role_errors),
+                            color=discord.Color.red(),
+                            timestamp=datetime.utcnow()
+                        )
+                        try:
+                            await log_channel.send(embed=embed)
+                        except Exception as e:
+                            print("Fehler beim Senden ins Verify-Log:", e)
+                # Pending behalten und NICHT in die DB schreiben, damit der User es
+                # nach der Korrektur nochmal versuchen kann (sonst Dublettensperre).
+                await interaction.followup.send(
+                    "Dein Code stimmt, aber die Rollen konnten nicht vergeben werden. "
+                    "Ein Admin wurde informiert – bitte versuche es gleich nochmal.",
+                    ephemeral=True
+                )
+                return
 
             await self._append_to_db(member, entry.get("roblox"), entry.get("roblox_id"))
 
